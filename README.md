@@ -5,7 +5,7 @@ The [essay](https://github.com/charliexchen/GANEssay/blob/master/GAN%20Essay/GAN
 However, for demonstration purposes, I also coded up some GANs which can learn simple distributions and MNIST, based on some online tutorials. 
 
 Since the essay's target audience was supposed to be at the level of fellow Part III students, it first covers some basics:
- * Quick overview of DNNs, CNNs, RNNS etc.
+ * Quick overview of DNNs, CNNs, backprop etc.
  * Definition of GANs and basic results based on Goodfellow's paper.
  * Some quick demonstrations with code from this repo.
 
