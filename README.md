@@ -1,5 +1,7 @@
 # Cambridge Maths Part III Essay -- Generative Adversarial Networks
-For Cambridge Maths Part III, there was the option to write an essay reviewing several papers as a substitute for an exam. One of the essay titles available was on GANs, and I ended up taking this option since it was the best opportunity dive into deep neural networks within that course (Sadly Cambridge courses are often a little too theoretical for its own good, though admittedly that is almost treated as a selling point for the Maths Tripos).
+For Cambridge Maths Part III, there was an option to write an essay reviewing several papers as a substitute for an exam. One of the essay titles available was on GANs, and I ended up taking this since I realised it was the best opportunity dive into deep neural networks within that course. 
+
+(Sadly Cambridge courses had a tendency to be a little too theoretical for its own good, though admittedly that is almost treated as a selling point for the Maths Tripos.)
 
 The [essay](https://github.com/charliexchen/GANEssay/blob/master/GAN%20Essay/GANEssay.pdf) was written from a mathematical perspective and reviewed the original papers on GANs by Ian Goodfellow, in addition to several other results hosted in the blog "[Off the Convex Path](https://www.offconvex.org/)".
 However, for demonstration purposes, I also coded up some GANs which can learn simple distributions and MNIST, based on some online tutorials. 
@@ -20,4 +22,6 @@ This is followed by some more interesting results:
 
 This repo is a fork of the original repository which hosted the code anonymously -- The essays had to be submitted without any identifiers to avoid examiner bias. 
 Since that is no longer an issue, I am migrating that code over to my named GitHub alongside with document containing my essay for posterity. Furthermore, there have been some more novel developments over at Off the Convex Path, and this code will allow me to start experimenting with that.
+
+
 
