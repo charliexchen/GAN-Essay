@@ -1,8 +1,8 @@
 # Cambridge Maths Part III Essay -- Generative Adversarial Networks
-For Cambridge Part III, there was the option to write an essay reviewing several papers as a substitute for an exam. One of these options was to write an essay on GANs, and I decided taking it since it was the only real opportunity to do anything which involved with deep neural nets within that course (The Cambridge Maths tripos was, unfortunately, a little too theoretical for its own good).
+For Cambridge Maths Part III, there was the option to write an essay reviewing several papers as a substitute for an exam. One of the essay titles available was on GANs, and I ended up taking this option since it was the best opportunity dive into deep neural networks within that course (The Cambridge Maths tripos was, sadly, a little too theoretical for its own good).
 
 The [essay](https://github.com/charliexchen/GANEssay/blob/master/GAN%20Essay/GANEssay.pdf) was written from a mathematical perspective and reviewed the original papers on GANs by Ian Goodfellow, in addition to several other results hosted in the blog "[Off the Convex Path](https://www.offconvex.org/)".
-However, for demonstration purposes, I also coded up some simple GANs which can learn simple distributions and MNIST, based on some online tutorials. 
+However, for demonstration purposes, I also coded up some GANs which can learn simple distributions and MNIST, based on some online tutorials. 
 
 Since the essay's target audience was supposed to be at the level of fellow Part III students, it first covers some basics:
  * Quick overview of DNNs, CNNs, RNNS etc.
