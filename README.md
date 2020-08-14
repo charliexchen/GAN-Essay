@@ -9,18 +9,14 @@ However, for demonstration purposes, I also coded up some GANs which can learn s
 Since the essay's target audience was supposed to be at the level of fellow Part III students (who doesn't have ML experience), it first covers some basics:
  * Quick overview of DNNs, CNNs, backprop etc.
  * Definition of GANs and basic results based on Goodfellow's paper.
- * Some quick demonstrations with code from this repo.
-
+ * Some quick demonstrations with code from this repo (image below is the outputs of the MNIST DCGAN compared to training data)
+ 
+![MNIST DCGAN](https://github.com/charliexchen/GANEssay/blob/master/GAN%20Essay/MNIST.png?raw=true)
 This is followed by some more interesting results:
  * Some exploration of theoretical limitations and practical challenges, along with some methods of mitigating those challenges which are used in practice.
  * A methodology for verifying the generalisation of GANs beyond its training data by leveraging a heuristic based on birthday attacks -- an area which had already been explored by computer scientists due to its utility in finding hash collisions.
  * Introducing the notion of generalisation of distances between probability distributions. This challenges some of the assumptions in Goodfellow's paper and provides some theoretical reasons for why GANs might generalise poorly or suffer from mode collapse.
  * Proof existence of (ε-approximate mixed) Nash Equilibriums in GANs under certain conditions. When people are first introduced to GANs they're often told that "eventually the discriminator will return 0.5 all the time, and the generator's outputs will hopefully be indistinguishable from the training data". This result essentially formalises this concept and shows that it is indeed a stable equilibrium which the GAN might arrive at.
-
-<figure class="image" text-align="center">
-  <img src="https://github.com/charliexchen/GANEssay/blob/master/GAN%20Essay/MNIST.png?raw=true">
-  <figcaption text-align="center">Outputs of DCGAN trained on MNIST compared to training data (Right) </figcaption>
-</figure>
 
 
 
