@@ -1,6 +1,6 @@
 from utils import Timer, DataLogger
 
-from tensorflow.examples.tutorials.mnist import input_data
+from keras.datasets.mnist import load_data
 from keras.models import Sequential
 from keras.layers import Dense, Activation, Flatten, Reshape
 from keras.layers import Conv2D, Conv2DTranspose, UpSampling2D
@@ -22,7 +22,8 @@ class GAN(object):
         self.epochs = 0
 
         # Load the training data
-        self.x_train = input_data.read_data_sets("mnist", one_hot=True).train.images
+        (self.x_train, _y_train), (x_test, _y_test) = load_data()
+
         self.x_train = self.x_train.reshape(-1, self.img_rows, self.img_cols, 1).astype(
             np.float32)
 
