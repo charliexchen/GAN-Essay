@@ -4,7 +4,7 @@ For Cambridge Maths Part III, there was an option to write an essay reviewing se
 (Sadly Cambridge courses had a tendency to be a little too theoretical for its own good, a fact which is often treated as a selling point for the Maths Tripos)
 
 The [essay](https://github.com/charliexchen/GANEssay/blob/master/GAN%20Essay/GANEssay.pdf) was written from a mathematical perspective and reviewed the original papers on GANs by Ian Goodfellow, in addition to several other results hosted in the blog "[Off the Convex Path](https://www.offconvex.org/)".
-However, for demonstration purposes, I also coded up some GANs which can learn simple distributions and MNIST, based on some online tutorials. 
+However, for demonstration purposes, I also coded up some GANs which can learn simple distributions and MNIST, based on this [code](https://github.com/roatienza/Deep-Learning-Experiments/blob/master/Experiments/Tensorflow/GAN/dcgan_mnist.py) by Rowel Atienza. 
 
 Since the essay's target audience was supposed to be at the level of fellow Part III students (who doesn't have ML experience), it first covers some basics:
  * Quick overview of DNNs, CNNs, backprop etc.
