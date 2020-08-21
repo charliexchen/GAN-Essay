@@ -4,6 +4,13 @@ import math
 import random
 
 
+def get_screen_dims():
+    display = pygame.display.get_surface()
+    width = display.get_width()
+    height = display.get_height()
+    return (width, height)
+
+
 class histogram:
     """Function to create realtime histogram and functions"""
 
@@ -33,9 +40,7 @@ class histogram:
         return [scale * x / (self.bucket_size * self.count) for x in self.buckets]
 
     def draw_histogram(self, screen, colour):
-        display = pygame.display.get_surface()
-        width = display.get_width()
-        height = display.get_height()
+        width, height = get_screen_dims()
         for ind, bucket in enumerate(self.scaled_histogram()):
             rectangle_height = bucket * height
             rectangle_width = width / self.bucket_count
@@ -47,25 +52,47 @@ class histogram:
 class graph:
     "function to creat realtime training graph"
 
+    def __init__(self, bucket_count: int, range_min: float, range_max: float):
+        self.func_inputs = np.linspace(range_min, range_max, bucket_count)
+        self.bucket_count = bucket_count
+
+    def draw_function(self, screen, colour, func, scale=1):
+        width, height = get_screen_dims()
+        func_outputs = [height - int(func(x) * scale) for x in self.func_inputs]
+
+        drawing_points = list(zip(
+            np.linspace(0, width, self.bucket_count),
+            func_outputs
+        ))
+        print(drawing_points)
+        pygame.draw.lines(screen, colour, False, drawing_points)
+
+
+def f(x):
+    return x
+
 
 if __name__ == "__main__":
 
     BLACK = (0, 0, 0)
     WHITE = (255, 255, 255)
+    RED = (255, 0, 0)
+
     boundary = [200, 200]
     pygame.init()
     screen = pygame.display.set_mode(boundary)
     clock = pygame.time.Clock()
     done = False
     hist = histogram(20, -2, 2)
+    gra = graph(20, -2, 2)
     while not done:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:  # If user clicked close
                 done = True
-        for i in range( 100):
-            hist.add_datapoint(random.normalvariate(0,1))
+        for i in range(100):
+            hist.add_datapoint(random.normalvariate(0, 1))
         screen.fill(BLACK)
         hist.draw_histogram(screen, WHITE)
-
+        gra.draw_function(screen, RED, f, 100)
         pygame.display.flip()
         clock.tick(30)
