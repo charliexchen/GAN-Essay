@@ -14,7 +14,7 @@ import numpy as np
 class GAN(object):
     # This is a toy dense net GAN which learn 1-d distributions
     def __init__(self):
-        # Initalise the Generator and Discriminator
+        # Initialize the Generator and Discriminator
         self.D = None  # discriminator
         self.G = None  # generator
         self.AM = None  # adversarial model
@@ -89,16 +89,12 @@ class GAN(object):
         # input is 32 samples from either a true or fake distribution
         self.D.add(Dense(128, input_dim=1))
         self.D.add(LeakyReLU(0.2))
-        self.D.add(Dense(32))
         self.D.add(Dense(1))
-        # one final sigmoind to ensure that the output is a probability
+        # one final sigmoid to ensure that the output is a probability
         self.D.add(Activation('sigmoid'))
         self.D.summary()
         return self.D
 
-    def bigtanh(self, x):
-        # We use this scaled tanh as the output rule to shift the range to [0,12] from [0,1]
-        return (K.tanh(x) * 6)
 
     def init_generator(self):
         # Defines the discriminator -- attempts to generate a vector of uniformly distributed distributions
@@ -108,12 +104,8 @@ class GAN(object):
         self.G.add(Dense(256, input_dim=1))
         self.G.add(LeakyReLU(0.2))
 
-        self.G.add(Dense(8))
-        self.G.add(LeakyReLU(0.2))
-
         self.G.add(Dense(1))
         # Custom output to ensure that that the output is on the correct domain
-        self.G.add(Activation(self.bigtanh))
 
         self.G.summary()
         return self.G
@@ -121,7 +113,7 @@ class GAN(object):
     def discriminator_model(self):
         # Defines the optimiser objective for the discriminator
         # We use the adam gradient method for both networks
-        optimizer = Adam(lr=0.0006, decay=15e-8)
+        optimizer = Adam(lr=0.006, decay=15e-8)
         self.DM = Sequential()
         self.DM.add(self.init_discriminator())
         self.DM.compile(loss='binary_crossentropy', optimizer=optimizer, \
@@ -131,10 +123,10 @@ class GAN(object):
     def adversarial_model(self):
         # Defines the objective for the generator
         # We use the adam gradient method for both networks
-        optimizer = Adam(lr=0.003, decay=10e-8)
+        optimizer = Adam(lr=0.0003, decay=10e-8)
         self.AM = Sequential()
         self.AM.add(self.init_generator())
-        self.AM.add(self.init_discriminator())
+        self.AM.add(self.D)
         # Note that we nest the generator and dicriminator -- this means the objective is defined in terms of the discriminator
         self.AM.compile(loss='binary_crossentropy', optimizer=optimizer, \
                         metrics=['accuracy'])
