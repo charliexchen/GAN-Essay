@@ -1,5 +1,5 @@
 import numpy as np
-from GANEssay.learn import get_function, get_derivative
+from .differentiable_functions import get_function, get_derivative
 
 
 class DenseLayer:

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="PublishConfigData" autoUpload="Always" serverName="ubuntu@ec2-18-130-94-221.eu-west-2.compute.amazonaws.com:22" preserveFilePermissions="true" remoteFilesAllowedToDisappearOnAutoupload="false">
+    <serverData>
+      <paths name="ubuntu@ec2-18-130-116-40.eu-west-2.compute.amazonaws.com:22">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/tmp/pycharm_project_105" local="$PROJECT_DIR$" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="ubuntu@ec2-18-130-94-221.eu-west-2.compute.amazonaws.com:22">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/tmp/pycharm_project_177" local="$PROJECT_DIR$" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="ubuntu@ec2-18-217-83-196.us-east-2.compute.amazonaws.com:22">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/tmp/pycharm_project_183" local="$PROJECT_DIR$" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="ubuntu@ec2-3-21-232-167.us-east-2.compute.amazonaws.com:22 (1)">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/tmp/pycharm_project_532" local="$PROJECT_DIR$" />
+          </mappings>
+        </serverdata>
+      </paths>
+    </serverData>
+    <option name="myAutoUpload" value="ALWAYS" />
+  </component>
+</project>

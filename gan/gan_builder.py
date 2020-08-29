@@ -1,5 +1,5 @@
 import yaml
-from GANEssay.learn.net import DenseNet
+from learn.net import DenseNet
 import os
 
 
