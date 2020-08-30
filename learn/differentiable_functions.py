@@ -108,14 +108,26 @@ log_policy_fd = FunctionWithDerivative(log_policy, d_log_policy)
 
 
 def cross_entropy(p, p0):
+    print(p, p0)
     return -np.dot(p0, np.log(p))
 
 
 def d_cross_entropy(p, p0):
+    print(p, p0, -np.dot(p0, 1 / p))
     return -np.dot(p0, 1 / p)
 
 
+def cross_entropy_1d(p, p0):
+    return -p0 * np.log(p) - (1 - p0) * np.log(1 - p)
+
+
+def d_cross_entropy_1d(p, p0):
+    return -p0 / p + (1 - p0) / (1 - p)
+
+
 cross_entropy_fd = FunctionWithDerivative(cross_entropy, d_cross_entropy)
+
+cross_entropy_1d_fd = FunctionWithDerivative(cross_entropy_1d, d_cross_entropy_1d)
 
 
 def linear(x):
@@ -158,6 +170,7 @@ string_to_differentiable_function = {
     'log': log_fd,
     'log_policy': log_policy_fd,
     'cross_entropy': cross_entropy_fd,
+    'cross_entropy_1d': cross_entropy_1d_fd,
     'linear': linear_fd,
     'none': None
 }

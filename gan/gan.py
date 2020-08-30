@@ -21,8 +21,13 @@ class GAN(object):
         self.DM = None  # discriminator model
 
         self.discriminator = self.discriminator_model()
-        self.adversarial = self.adversarial_model()
+
         self.generator = self.init_generator()
+        self.adversarial = self.adversarial_model()
+
+
+        for layer in self.discriminator.layers:
+            print(layer,layer.weights)
 
     # The real function for some distributions for plotting purposes
     def exp(self, t):
@@ -52,10 +57,10 @@ class GAN(object):
 
     def generateFakeData(self, batch_size):
         # This function samples from the generated distribution
-        noise = 10 * np.random.uniform(-1.0, 1.0, size=[batch_size, 1])
+        noise =  np.random.uniform(-1.0, 1.0, size=[batch_size, 4])
         return self.generator.predict([noise])
 
-    def train(self, generation, batch_size=1024):
+    def train(self, generation, batch_size=4000):
         # This is effectively algorithm 1 in the essay, with the heuristic game instead of the minimax game
 
         # This is the training loop for the discriminator
@@ -76,9 +81,12 @@ class GAN(object):
         # Plugging this into the cross entropy mean the objective for the generator maximises Log(D(G(x)))
         # This is the heuristic game which gives us better gradients early in training
 
+
         y = np.ones([batch_size, 1])
-        noise = 10 * np.random.uniform(-1.0, 1.0, size=[batch_size, 1])
+        noise = np.random.uniform(-1.0, 1.0, size=[batch_size, 4])
+        print()
         a_loss = self.adversarial.train_on_batch(noise, y)
+
 
         return data_fake
 
@@ -87,8 +95,9 @@ class GAN(object):
         # The prior is a random vector
         self.D = Sequential()
         # input is 32 samples from either a true or fake distribution
-        self.D.add(Dense(128, input_dim=1))
+        self.D.add(Dense(1024, input_dim=1))
         self.D.add(LeakyReLU(0.2))
+
         self.D.add(Dense(1))
         # one final sigmoid to ensure that the output is a probability
         self.D.add(Activation('sigmoid'))
@@ -101,7 +110,7 @@ class GAN(object):
         # This is a densenet with ReLU activations
         self.G = Sequential()
 
-        self.G.add(Dense(256, input_dim=1))
+        self.G.add(Dense(1024, input_dim=4))
         self.G.add(LeakyReLU(0.2))
 
         self.G.add(Dense(1))
@@ -113,7 +122,7 @@ class GAN(object):
     def discriminator_model(self):
         # Defines the optimiser objective for the discriminator
         # We use the adam gradient method for both networks
-        optimizer = Adam(lr=0.006, decay=15e-8)
+        optimizer = Adam(lr=0.05)
         self.DM = Sequential()
         self.DM.add(self.init_discriminator())
         self.DM.compile(loss='binary_crossentropy', optimizer=optimizer, \
@@ -123,10 +132,12 @@ class GAN(object):
     def adversarial_model(self):
         # Defines the objective for the generator
         # We use the adam gradient method for both networks
-        optimizer = Adam(lr=0.0003, decay=10e-8)
+        optimizer = Adam(lr=0.001)
         self.AM = Sequential()
-        self.AM.add(self.init_generator())
+        self.AM.add(self.G)
         self.AM.add(self.D)
+
+
         # Note that we nest the generator and dicriminator -- this means the objective is defined in terms of the discriminator
         self.AM.compile(loss='binary_crossentropy', optimizer=optimizer, \
                         metrics=['accuracy'])

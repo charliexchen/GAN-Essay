@@ -116,6 +116,10 @@ if __name__ == "__main__":
     gan = GAN()
 
 
+    def eval_d(x):
+        y = gan.D.predict(x)
+        return y.flatten()
+
     def eval_disc(x):
         y = gan.discriminator.predict(x)
         return y.flatten()
@@ -154,5 +158,6 @@ if __name__ == "__main__":
 
         gra.draw_function(screen, GREEN, optimal_disc)
         gra.draw_vectorised_function(screen, BLUE, eval_disc)
+
         pygame.display.flip()
         clock.tick(30)

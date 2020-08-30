@@ -1,26 +1,25 @@
 ---
 model_config:
-  batch_size: 2048
   discriminator_config:
+    batch_size: 2048
     layers:
-    - units: 128
+    - units: 256
       activation: sigmoid
     - units: 1
       activation: sigmoid
-    learning_rate: 0.0001
-    initialization_variance: 0.01
+    learning_rate: -0.1
+    initialization_variance: 0.1
   generator_config:
+    batch_size: 2048
     noise_type: uniform
     noise_dim: 1
     layers:
     - units: 128
       activation: sigmoid
-    - units: 128
-      activation: sigmoid
     - units: 1
       activation: sigmoid
-    learning_rate: 0.0001
-    initialization_variance: 0.01
+    learning_rate: -0.1
+    initialization_variance: 1
   target_distribution:
     name: normal
     mean: 0

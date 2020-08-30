@@ -1,5 +1,5 @@
 import numpy as np
-from .differentiable_functions import get_function, get_derivative
+from differentiable_functions import get_function, get_derivative
 
 
 class DenseLayer:
@@ -135,12 +135,12 @@ class DenseNet:
         assert self.fitness_function_string != 'none', 'No fitness function defined'
         fitness_function = get_function(self.fitness_function_string)
         y = self.layers[-1].output
-        return fitness_function(y0, y)
+        return fitness_function(y, y0)
 
     def _calculate_derivatives(self, y0):
         """Calculates derivatives in all layers,Assumes that x has already been passed through"""
         fitness_derivative = get_derivative(self.fitness_function_string)
-        dldx = fitness_derivative(y0, self.layers[-1].output)
+        dldx = fitness_derivative(self.layers[-1].output, y0)
         for layer in self.layers[::-1]:
             activation_derivative = get_derivative(layer.activation_string)
             dlds = np.dot(activation_derivative(layer.s), dldx)
@@ -163,15 +163,14 @@ class DenseNet:
             output += layer.__repr__() + frozen_string + '\n'
         return output
 
-
-def update(self, vx, vy, a=-0.001):
-    fitness = 0
-    for x, y in zip(vx, vy):
-        self.activate(x)
-        fitness += self._fitness(y)
-        self._calculate_derivatives(y)
-        self._update(a)
-    return fitness
+    def update(self, vx, vy, a=-0.001):
+        fitness = 0
+        for x, y in zip(vx, vy):
+            self.activate(x)
+            fitness += self._fitness(y)
+            self._calculate_derivatives(y)
+            self._update(a)
+        return fitness
 
 
 @staticmethod
