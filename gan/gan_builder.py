@@ -1,7 +1,12 @@
 import yaml
 from learn.net import DenseNet
 import os
+import copy
 import numpy as np
+from keras.layers import Dense, Activation, LeakyReLU, InputLayer
+from keras import Sequential
+
+from keras.optimizers import Adam
 
 
 class GANBuilder:
@@ -9,9 +14,7 @@ class GANBuilder:
         config = self._get_config(config_path)
         self.model_config = config['model_config']
         self.dashboard_config = config['dashboard_config']
-        self.discriminator = self._build_discriminator()
-        self.generator = self._build_generator()
-        self.adversarial = self._build_adversarial()
+        self.generator, self.discriminator, self.adversarial = self._compile_models()
 
     def _generate_data_real(self, batch_size):
         data_config = self.model_config['target_distribution']
@@ -33,7 +36,7 @@ class GANBuilder:
 
     def generate_samples(self, batch_size):
         noise = self._generate_noise(batch_size)
-        return np.array([self.generator.activate(n) for n in noise])
+        return self.generator.predict(noise)
 
     def _train_discriminator_batch(self):
         batch_size = self.model_config['discriminator_config']['batch_size']
@@ -45,13 +48,14 @@ class GANBuilder:
 
         labels_shuffled = labels[shuffling]
         data_shuffled = np.concatenate((real_data, fake_data))[shuffling]
-        print(self.discriminator.update(data_shuffled, labels_shuffled))
+
+        self.discriminator.train_on_batch(data_shuffled, labels_shuffled)
 
     def _train_generator_batch(self):
         batch_size = self.model_config['generator_config']['batch_size']
         noise = self._generate_noise(batch_size)
-        labels = np.ones(batch_size)
-        print(self.adversarial.update(noise, labels))
+        labels = np.ones([batch_size, 1])
+        self.adversarial.train_on_batch(noise, labels)
 
     @staticmethod
     def _get_config(config_path):
@@ -60,49 +64,65 @@ class GANBuilder:
 
     @staticmethod
     def _build_model(params):
-        output_model = DenseNet(
-            params['input_size'],
-            params['fitness'],
-            initial_variance=params['initialization_variance']
-        )
-        for i, layer in enumerate(params['layers']):
-            initial_variance = layer['initialization_variance'] \
-                if 'initial_variance' in layer else params['initialization_variance']
-            output_model.add_layer(
-                layer['units'],
-                layer['activation'],
-                initial_variance
-            )
-        return output_model
+        model = Sequential()
+        model.add(InputLayer(input_shape=params['input_shape']))
+        for layer_config in params['layers']:
+            if layer_config['type'] == 'dense':
+                model.add(Dense(layer_config['units']))
+            elif layer_config['type'] == 'leaky_relu':
+                model.add(LeakyReLU(layer_config['alpha']))
+            elif layer_config['type'] == 'sigmoid':
+                model.add(Activation('sigmoid'))
+            else:
+                raise ValueError('No corresponding layer config for {}'.format(layer_config['type']))
+        model.summary()
+        return model
 
     def _build_generator(self):
-        generator_config = self.model_config['generator_config']
-        generator_config['input_size'] = generator_config['noise_dim']
-        generator_config['fitness'] = 'none'  # The generator doesn't have
+        generator_config = copy.deepcopy(self.model_config['generator_config'])
+        generator_config['input_shape'] = (generator_config['noise_dim'],)
+        print((generator_config['noise_dim'],))
         return GANBuilder._build_model(generator_config)
 
     def _build_discriminator(self):
-        discriminator_config = self.model_config['discriminator_config']
+        discriminator_config = copy.deepcopy(self.model_config['discriminator_config'])
         # input size of the discriminator should be the same as the generator's output
         generator_layers = self.model_config['generator_config']['layers']
-        discriminator_config['input_size'] = generator_layers[-1]['units']
-        discriminator_config['fitness'] = 'cross_entropy_1d'
+        discriminator_config['input_shape'] = (generator_layers[-1]['units'],)
         return GANBuilder._build_model(discriminator_config)
 
-    def _build_adversarial(self):
-        assert self.discriminator is not None, "Discriminator no yet built"
-        assert self.generator is not None, "Generator no yet built"
-        adversarial_model = DenseNet(self.generator.input_size,
-                                     self.discriminator.fitness_function_string,
-                                     learning_rate=self.generator.learning_rate,
-                                     )
-        adversarial_model.frozen = [False for _ in range(len(self.generator.layers))] + [True for _ in range(
-            len(self.discriminator.layers))]
-        adversarial_model.layers = self.generator.layers + self.discriminator.layers
-        return adversarial_model
+    @staticmethod
+    def _build_optimiser(optimiser_config):
+        if optimiser_config['type'] == 'adam':
+            return Adam(lr=optimiser_config['learning_rate'])
+        else:
+            raise ValueError('No corresponding optimiser config for {}'.format(optimiser_config['type']))
+
+    def _compile_models(self):
+        discriminator = self._build_discriminator()
+        discriminator_optimiser_config = self.model_config['discriminator_config']['optimiser']
+        discriminator_optimiser = GANBuilder._build_optimiser(discriminator_optimiser_config)
+        discriminator.compile(loss='binary_crossentropy', optimizer=discriminator_optimiser)
+
+        generator = self._build_generator()
+        generator_optimiser_config = self.model_config['generator_config']['optimiser']
+        generator_optimiser = GANBuilder._build_optimiser(generator_optimiser_config)
+
+        adversarial = Sequential()
+        adversarial.add(generator)
+        adversarial.add(discriminator)
+        adversarial.layers[1].trainable = False
+        adversarial.compile(loss='binary_crossentropy', optimizer=generator_optimiser)
+
+        return generator, discriminator, adversarial
+
+    def train_one_batch(self):
+        self._train_discriminator_batch()
+        self._train_generator_batch()
 
 
 if __name__ == "__main__":
     gan = GANBuilder('gan_config.yaml')
-    for _ in range(100):
-        print(gan._train_discriminator_batch())
+    for _ in range(5):
+        gan.train_one_batch()
+    print('finished')

@@ -2,7 +2,7 @@ import pygame
 import numpy as np
 import math
 from colours import *
-from gan import GAN
+from gan_builder import GANBuilder
 import random
 from collections import deque
 
@@ -113,12 +113,7 @@ class GaussianKernel:
 
 if __name__ == "__main__":
 
-    gan = GAN()
-
-
-    def eval_d(x):
-        y = gan.D.predict(x)
-        return y.flatten()
+    gan = GANBuilder('gan_config.yaml')
 
     def eval_disc(x):
         y = gan.discriminator.predict(x)
@@ -148,7 +143,8 @@ if __name__ == "__main__":
             if event.type == pygame.QUIT:  # If user clicked close
                 done = True
         screen.fill(BLACK)
-        samples = gan.train(++count).flatten()
+        samples = gan.generate_samples(4000)
+        gan.train_one_batch()
 
         hist.reset()
         est.add_points(samples)

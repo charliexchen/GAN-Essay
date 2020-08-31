@@ -1,25 +1,32 @@
 ---
 model_config:
   discriminator_config:
-    batch_size: 2048
+    batch_size: 4096
     layers:
-    - units: 256
-      activation: sigmoid
-    - units: 1
-      activation: sigmoid
-    learning_rate: -0.1
-    initialization_variance: 0.1
+    - type: dense
+      units: 1024
+    - type: leaky_relu
+      alpha: 0.2
+    - type: dense
+      units: 1
+    - type: sigmoid
+    optimiser:
+      type: adam
+      learning_rate: 0.05
   generator_config:
-    batch_size: 2048
+    batch_size: 4096
     noise_type: uniform
-    noise_dim: 1
+    noise_dim: 4
     layers:
-    - units: 128
-      activation: sigmoid
-    - units: 1
-      activation: sigmoid
-    learning_rate: -0.1
-    initialization_variance: 1
+    - type: dense
+      units: 1024
+    - type: leaky_relu
+      alpha: 0.2
+    - type: dense
+      units: 1
+    optimiser:
+      type: adam
+      learning_rate: 0.001
   target_distribution:
     name: normal
     mean: 0
