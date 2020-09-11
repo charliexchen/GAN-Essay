@@ -113,7 +113,7 @@ class GaussianKernel:
 
 if __name__ == "__main__":
 
-    gan = GANBuilder('gan_config.yaml')
+    gan = GANBuilder('gan_config_bimodal.yaml')
 
     def eval_disc(x):
         y = gan.discriminator.predict(x)
@@ -143,8 +143,8 @@ if __name__ == "__main__":
             if event.type == pygame.QUIT:  # If user clicked close
                 done = True
         screen.fill(BLACK)
-        samples = gan.generate_samples(4000)
-        gan.train_one_batch()
+        samples = gan.train_one_batch()
+
 
         hist.reset()
         est.add_points(samples)

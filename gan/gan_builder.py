@@ -21,6 +21,16 @@ class GANBuilder:
         if data_config['name'] == 'normal':
             return np.random.normal(loc=data_config['mean'], scale=data_config['standard_deviation'],
                                     size=[batch_size, 1])
+        if data_config['name'] == 'bimodal':
+            half_batch_size = int(batch_size / 2)
+            data = np.concatenate(
+                (np.random.normal(loc=data_config['mean_one'], scale=data_config['standard_deviation'],
+                                  size=[half_batch_size, 1]),
+                 np.random.normal(loc=data_config['mean_two'], scale=data_config['standard_deviation'],
+                                  size=[half_batch_size, 1]))
+            )
+            np.random.shuffle(data)
+            return data
         else:
             raise LookupError("Invalid data generation type in config")
 
@@ -50,12 +60,23 @@ class GANBuilder:
         data_shuffled = np.concatenate((real_data, fake_data))[shuffling]
 
         self.discriminator.train_on_batch(data_shuffled, labels_shuffled)
+        return fake_data
 
     def _train_generator_batch(self):
         batch_size = self.model_config['generator_config']['batch_size']
         noise = self._generate_noise(batch_size)
         labels = np.ones([batch_size, 1])
         self.adversarial.train_on_batch(noise, labels)
+
+    def _train_generator_batch_unrolled(self, k=5):
+        batch_size = self.model_config['generator_config']['batch_size']
+        noise = self._generate_noise(batch_size)
+        labels = np.ones([batch_size, 1])
+        discriminator_weights = self.discriminator.get_weights()
+        for _ in range(k):
+            self._train_discriminator_batch()
+        self.adversarial.train_on_batch(noise, labels)
+        self.discriminator.set_weights(discriminator_weights)
 
     @staticmethod
     def _get_config(config_path):
@@ -81,7 +102,6 @@ class GANBuilder:
     def _build_generator(self):
         generator_config = copy.deepcopy(self.model_config['generator_config'])
         generator_config['input_shape'] = (generator_config['noise_dim'],)
-        print((generator_config['noise_dim'],))
         return GANBuilder._build_model(generator_config)
 
     def _build_discriminator(self):
@@ -117,12 +137,12 @@ class GANBuilder:
         return generator, discriminator, adversarial
 
     def train_one_batch(self):
-        self._train_discriminator_batch()
-        self._train_generator_batch()
+        self._train_generator_batch_unrolled(5)
+        return self._train_discriminator_batch()
 
 
 if __name__ == "__main__":
-    gan = GANBuilder('gan_config.yaml')
+    gan = GANBuilder('gan_config_unrolled.yaml')
     for _ in range(5):
         gan.train_one_batch()
     print('finished')

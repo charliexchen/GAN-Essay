@@ -19,20 +19,22 @@ model_config:
     noise_dim: 4
     layers:
     - type: dense
-      units: 1024
+      units: 2048
     - type: leaky_relu
       alpha: 0.2
     - type: dense
       units: 1
     optimiser:
       type: adam
-      learning_rate: 0.001
+      learning_rate: 0.002
   target_distribution:
-    name: normal
-    mean: 0
-    standard_deviation: 1
-  training_method: standard
-  training_params: {}
+    name: bimodal
+    mean_one: -1.5
+    mean_two: 1.5
+    standard_deviation: 0.6
+  training_method: unrolled
+  training_params:
+    k: 5
 dashboard_config:
   screen_height: 200
   screen_width: 300
