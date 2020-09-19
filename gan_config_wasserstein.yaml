@@ -2,7 +2,6 @@
 model_config:
   discriminator_config:
     batch_size: 4096
-    iterations: 5
     layers:
     - type: dense
       units: 1024
@@ -10,10 +9,9 @@ model_config:
       alpha: 0.2
     - type: dense
       units: 1
-    - type: sigmoid
     optimiser:
       type: adam
-      learning_rate: 0.05
+      learning_rate: 0.02
   generator_config:
     batch_size: 4096
     noise_type: uniform
@@ -32,7 +30,10 @@ model_config:
     name: normal
     mean: 0
     standard_deviation: 1
-  gan_type: standard
+  gan_type: wasserstein
+  gan_params:
+    clipping:
+      0.02
   training_method: standard
   training_params: {}
 dashboard_config:

@@ -1,13 +1,20 @@
-import yaml
-from learn.net import DenseNet
-import os
 import copy
 import numpy as np
-from keras.layers import Dense, Activation, LeakyReLU, InputLayer
+import os
+import tensorflow.keras.backend as kb
+import yaml
 from keras import Sequential
-
+from keras.layers import Dense, Activation, LeakyReLU, InputLayer
 from keras.optimizers import Adam
+from keras.constraints import Constraint
+from keras import backend as K
+from learn.net import DenseNet
 
+
+def wasserstein_loss(y_actual, y_pred):
+    loss = y_actual * y_pred/y_actual.shape[0]
+
+    return loss
 
 class GANBuilder:
     def __init__(self, config_path=None):
@@ -53,13 +60,20 @@ class GANBuilder:
         split_size = int(batch_size / 2)
         real_data = self._generate_data_real(split_size)
         fake_data = self.generate_samples(split_size)
-        labels = np.concatenate((np.ones(split_size), np.zeros(split_size)))
+        labels = np.concatenate((np.ones(split_size), -np.ones(split_size)))
         shuffling = np.random.permutation(len(labels))
 
         labels_shuffled = labels[shuffling]
         data_shuffled = np.concatenate((real_data, fake_data))[shuffling]
 
         self.discriminator.train_on_batch(data_shuffled, labels_shuffled)
+        if self.model_config['gan_type'] == 'wasserstein':
+            clipping = self.model_config['gan_params']['clipping']
+            for layer in self.discriminator.layers:
+                new_weights = []
+                for weights in layer.get_weights():
+                    new_weights.append(K.clip(weights, -clipping, clipping))
+                layer.set_weights(new_weights)
         return fake_data
 
     def _train_generator_batch(self):
@@ -122,7 +136,11 @@ class GANBuilder:
         discriminator = self._build_discriminator()
         discriminator_optimiser_config = self.model_config['discriminator_config']['optimiser']
         discriminator_optimiser = GANBuilder._build_optimiser(discriminator_optimiser_config)
-        discriminator.compile(loss='binary_crossentropy', optimizer=discriminator_optimiser)
+        if self.model_config['gan_type'] == 'standard':
+            loss = 'binary_crossentropy'
+        elif self.model_config['gan_type'] == 'wasserstein':
+            loss = wasserstein_loss
+        discriminator.compile(loss=loss, optimizer=discriminator_optimiser)
 
         generator = self._build_generator()
         generator_optimiser_config = self.model_config['generator_config']['optimiser']
@@ -132,17 +150,23 @@ class GANBuilder:
         adversarial.add(generator)
         adversarial.add(discriminator)
         adversarial.layers[1].trainable = False
-        adversarial.compile(loss='binary_crossentropy', optimizer=generator_optimiser)
+        adversarial.compile(loss=loss, optimizer=generator_optimiser)
 
         return generator, discriminator, adversarial
 
     def train_one_batch(self):
-        self._train_generator_batch_unrolled(5)
-        return self._train_discriminator_batch()
+        self._train_generator_batch()
+        if 'iterations' in self.model_config['discriminator_config']:
+            k=self.model_config['discriminator_config']['iterations']
+        else:
+            k=1
+        for _ in range(k):
+           samples = self._train_discriminator_batch()
+        return samples
 
 
 if __name__ == "__main__":
-    gan = GANBuilder('gan_config_unrolled.yaml')
-    for _ in range(5):
+    gan = GANBuilder('gan_config.yaml')
+    for _ in range():
         gan.train_one_batch()
     print('finished')

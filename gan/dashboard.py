@@ -113,10 +113,11 @@ class GaussianKernel:
 
 if __name__ == "__main__":
 
-    gan = GANBuilder('gan_config_bimodal.yaml')
+    gan = GANBuilder('gan_config_wasserstein.yaml')
 
     def eval_disc(x):
         y = gan.discriminator.predict(x)
+        print(y.flatten())
         return y.flatten()
 
 

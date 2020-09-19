@@ -1,5 +1,12 @@
+import jax.numpy as jnp
 import numpy as np
+from jax import grad, jit, vmap, nn
+
 from differentiable_functions import get_function, get_derivative
+
+
+class JAXUtils:
+    """Class to contain the evaluation functions for the neural nets"""
 
 
 class DenseLayer:
@@ -28,12 +35,17 @@ class DenseLayer:
         activation_string = add_buffer(' {} activation'.format(self.activation_string), 20)
         return params_string + neuron_string + activation_string
 
-    def activate(self, inputs):
+    def activate_layer(self, inputs):
         self.input[1:] = inputs
         self.s = np.dot(self.weights, self.input)
         activation_function = get_function(self.activation_string)
         self.output = activation_function(self.s)
         return self.output
+
+    @staticmethod
+    def activate_layer_static(inputs, params):
+        s = jnp.dot(params[:, 1:], inputs) + params[:, 0]
+        return nn.leaky_relu(s)
 
     def mutate(self, rate):
         self.weights += np.random.normal(0, rate,
@@ -68,6 +80,29 @@ class DenseNet:
         if self.recursive:
             self.input_with_state = []
 
+    def activate_xla(self, inputs):
+        """Vectorised method for running NN with JAX"""
+        activate_xla_impl = jit(vmap(DenseNet._activate_static, in_axes=(0, None)))
+        params = [layer.weights for layer in self.layers]
+        return activate_xla_impl(inputs, params)
+
+    @staticmethod
+    def _fitness_static(input, y0, params):
+        y = DenseNet._activate_static(input, params)
+        return jnp.dot(y0 - y, y0 - y)
+
+    def fitness_xla(self, inputs, y0):
+        """Vectorised method for calculating fitness with JAX"""
+        fitness_xla_impl = jit(vmap(DenseNet._fitness_static, in_axes=(0, 0, None)))
+        params = [layer.weights for layer in self.layers]
+        return fitness_xla_impl(inputs, y0, params)
+
+    def derivative_xla(self, inputs, y0):
+        """Vectorised method for calculating fitness with JAX"""
+        fitness_xla_impl = jit(vmap(jit(grad(DenseNet._fitness_static, argnums=2)), in_axes=(0, 0, None)))
+        params = [layer.weights for layer in self.layers]
+        return fitness_xla_impl(inputs, y0, params)
+
     def __repr__(self):
         pass
 
@@ -101,14 +136,21 @@ class DenseNet:
             self.input_with_state[:self.input_size] = inputs
             output = self.input_with_state
             for layer in self.layers:
-                output = layer.activate(output)
+                output = layer.activate_layer(output)
             self.input_with_state[self.input_size:] = self.layers[-1].input[1:]
             return output
         else:
             output = inputs
             for layer in self.layers:
-                output = layer.activate(output)
+                output = layer.activate_layer(output)
             return output
+
+    @staticmethod
+    def _activate_static(inputs, params):
+        outputs = inputs
+        for param in params:
+            outputs = DenseLayer.activate_layer_static(outputs, param)
+        return outputs
 
     def mutate(self, rate):
         """Adds random noise to weights. Useful for evolution"""
@@ -210,13 +252,13 @@ def update_trajectory(self, trajectory, discount=1.0, a=-0.001):
             reward_derivative.append(discount * reward_derivative[-1] + reward)
     reward_derivative = reward_derivative[::-1]
     for x, y, z in zip(vx, vy, reward_derivative):
-        self.activate(x)
+        self.activate_layer(x)
         self._calculate_derivatives(y)
         self._update(a * z)
 
 
 def simple_test(recursive):
-    net = DenseNet(3, 'square_difference', recursive)
+    net = DenseNet(3, 'square_diff', recursive)
     net.add_layer(2, 'sigmoid')
     net.add_layer(2, 'sigmoid')
     print(net.activate(np.array([1, 1, 1])))
@@ -225,8 +267,15 @@ def simple_test(recursive):
     net.mutate(0.01)
     print(net.activate(np.array([1, 1, 1])))
     print(net.activate(np.array([1, 1, 1])))
-    print(net._fitness([0, 0]))
-    net._calculate_derivatives([0, 0])
+    print(net._fitness(jnp.array([0, 0])))
+    net._calculate_derivatives(jnp.array([0, 0]))
+    print(net.activate_xla(jnp.array([jnp.array([1, 1, 1]), jnp.array([1, 1, 2])])))
+
+    print(net.fitness_xla(jnp.array([jnp.array([1, 1, 1]), jnp.array([1, 1, 2])]),
+                          jnp.array([jnp.array([0, 0]), jnp.array([0, 0])])))
+
+    print('grads', net.derivative_xla(jnp.array([jnp.array([1., 1., 1.]), jnp.array([1., 1., 2.])]),
+                                      jnp.array([jnp.array([.0, .0]), jnp.array([.0, .0])])))
 
 
 def run_stress(recursive):
@@ -237,21 +286,19 @@ def run_stress(recursive):
     net.add_layer(128, 'sigmoid')
     net.add_layer(2, 'sigmoid')
     input = np.array([1, 1, 1])
-    for i in range(1000):
+    for _ in range(1000):
         net.activate(np.array(input))
 
 
 def training_stress():
-    net = DenseNet(1, 'square_diff', False)
     net.add_layer(128, 'sigmoid')
     net.add_layer(32, 'sigmoid')
     net.add_layer(1, 'linear')
-    print(net)
     for i in range(1000000):
         x = np.random.uniform(-4, 4)
 
         input = np.array([x])
-        net.activate(input)
+        net.activate_layer(input)
         net._fitness(input)
         if i % 50000 == 0:
             print(net._fitness(input))
@@ -259,7 +306,7 @@ def training_stress():
         net._calculate_derivatives(input)
         net._update(-0.0001)
         if i % 10000 == 0:
-            print(net.activate(np.array([-1])), net.activate(0.1), net.activate(1))
+            print(net.activate_layer(np.array([-1])), net.activate_layer(0.1), net.activate_layer(1))
 
 
 def time_test(recursive):
@@ -273,8 +320,8 @@ def train_time_test():
 
 
 if __name__ == "__main__":
-    training_stress()
-    simple_test(True)
+    # training_stress()
+    simple_test(False)
     """  simple_test(False)
     time_test(True)
     time_test(False)

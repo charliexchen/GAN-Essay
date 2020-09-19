@@ -1,4 +1,4 @@
-import numpy as np
+import jax.numpy as jnp
 
 
 class FunctionWithDerivative:
@@ -8,40 +8,40 @@ class FunctionWithDerivative:
 
 
 def sigmoid(x):
-    return 1 / (1 + np.exp(-x))
+    return 1 / (1 + jnp.exp(-x))
 
 
 def d_sigmoid(x):
-    return np.diag(np.exp(-x) / ((1 + np.exp(-x)) ** 2))
+    return jnp.diag(jnp.exp(-x) / ((1 + jnp.exp(-x)) ** 2))
 
 
 sigmoid_fd = FunctionWithDerivative(sigmoid, d_sigmoid)
 
 
 def relu(x):
-    return np.maximum(x, 0.0)
+    return jnp.maximum(x, 0.0)
 
 
 def d_relu(x):
-    return np.diag(np.where(x > 0, 1.0, 0.0))
+    return jnp.diag(jnp.where(x > 0, 1.0, 0.0))
 
 
 relu_fd = FunctionWithDerivative(relu, d_relu)
 
 
 def tanh(x, scale=1.0):
-    return scale * np.tanh(x)
+    return scale * jnp.tanh(x)
 
 
 def d_tanh(x, scale=1.0):
-    return np.diag(scale / (np.cosh(x) ** 2))
+    return jnp.diag(scale / (jnp.cosh(x) ** 2))
 
 
 tanh_fd = FunctionWithDerivative(tanh, d_tanh)
 
 
 def square_diff(y0, y):
-    return np.dot(y0 - y, y0 - y)
+    return jnp.dot(y0 - y, y0 - y)
 
 
 def d_square_diff(y0, y):
@@ -52,19 +52,19 @@ square_diff_fd = FunctionWithDerivative(square_diff, d_square_diff)
 
 
 def softmax(x):
-    exp = np.exp(x)
-    return exp / np.sum(exp)
+    exp = jnp.exp(x)
+    return exp / jnp.sum(exp)
 
 
 def d_softmax(x):
-    exp = np.exp(x)
-    denum = np.sum(exp)
-    diag = np.diag(exp / denum)
+    exp = jnp.exp(x)
+    denum = jnp.sum(exp)
+    diag = jnp.diag(exp / denum)
 
-    off_diag = np.array(np.matrix([
-        np.array([-(exp[i] * exp[j]) / denum ** 2
-                  for j in range(len(x))
-                  ]) for i in range(len(x))
+    off_diag = jnp.array(jnp.matrix([
+        jnp.array([-(exp[i] * exp[j]) / denum ** 2
+                   for j in range(len(x))
+                   ]) for i in range(len(x))
     ]))
     return diag + off_diag
 
@@ -73,20 +73,20 @@ softmax_fd = FunctionWithDerivative(softmax, d_softmax)
 
 
 def softmax_i(x, i):
-    exp = np.exp(x)
-    return exp[i] / np.sum(exp)
+    exp = jnp.exp(x)
+    return exp[i] / jnp.sum(exp)
 
 
 def d_softmax_i(x, i):
-    exp = np.exp(x)
-    return -(exp[i] / np.sum(exp)) ** 2
+    exp = jnp.exp(x)
+    return -(exp[i] / jnp.sum(exp)) ** 2
 
 
 softmax_i_fd = FunctionWithDerivative(softmax_i, d_softmax_i)
 
 
 def log(x, ind):
-    return np.log(x)
+    return jnp.log(x)
 
 
 def d_log(x):
@@ -97,11 +97,11 @@ log_fd = FunctionWithDerivative(log, d_log)
 
 
 def log_policy(ind, x):
-    return np.log(x[ind])
+    return jnp.log(x[ind])
 
 
 def d_log_policy(ind, x):
-    return np.array([min(1 / x[i], 1000) if i == ind else 0 for i in range(len(x))])
+    return jnp.array([min(1 / x[i], 1000) if i == ind else 0 for i in range(len(x))])
 
 
 log_policy_fd = FunctionWithDerivative(log_policy, d_log_policy)
@@ -109,16 +109,16 @@ log_policy_fd = FunctionWithDerivative(log_policy, d_log_policy)
 
 def cross_entropy(p, p0):
     print(p, p0)
-    return -np.dot(p0, np.log(p))
+    return -jnp.dot(p0, jnp.log(p))
 
 
 def d_cross_entropy(p, p0):
-    print(p, p0, -np.dot(p0, 1 / p))
-    return -np.dot(p0, 1 / p)
+    print(p, p0, -jnp.dot(p0, 1 / p))
+    return -jnp.dot(p0, 1 / p)
 
 
 def cross_entropy_1d(p, p0):
-    return -p0 * np.log(p) - (1 - p0) * np.log(1 - p)
+    return -p0 * jnp.log(p) - (1 - p0) * jnp.log(1 - p)
 
 
 def d_cross_entropy_1d(p, p0):
@@ -142,20 +142,20 @@ linear_fd = FunctionWithDerivative(linear, d_linear)
 
 
 def huber(y0, y):
-    sq = np.dot(y0 - y, y0 - y)
+    sq = jnp.dot(y0 - y, y0 - y)
     if sq < 1:
         return sq / 2
     else:
-        return np.sqrt(sq) - 0.5
+        return jnp.sqrt(sq) - 0.5
 
 
 def d_huber(y0, y):
-    sq = np.dot(y0 - y, y0 - y)
+    sq = jnp.dot(y0 - y, y0 - y)
 
     if sq < 1:
         return -(y0 - y)
     else:
-        return -(y0 - y) / np.linalg.norm(y0 - y)
+        return -(y0 - y) / jnp.linalg.norm(y0 - y)
 
 
 huber_fd = FunctionWithDerivative(huber, d_huber)
