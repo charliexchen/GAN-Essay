@@ -1,5 +1,5 @@
 # Cambridge Maths Part III Essay -- Generative Adversarial Networks
-For Cambridge Maths Part III, there was an option to write an essay reviewing several papers as a substitute for an exam. One of the essay titles available was on GANs, and I ended up taking this since I realised it was the best opportunity dive into deep neural networks within that course. 
+For Cambridge Maths Part III, there was an option to write an essay reviewing several papers as a substitute for an exam. One of the essay titles available was on GANs, and I ended up taking this since I realised it was the best opportunity to dive into deep neural networks within that course. 
 
 (Sadly Cambridge courses had a tendency to be a little too theoretical for its own good, a fact which is often treated as a selling point for the Maths Tripos)
 
