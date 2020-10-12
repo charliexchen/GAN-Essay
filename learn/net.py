@@ -5,10 +5,6 @@ from jax import grad, jit, vmap, nn
 from differentiable_functions import get_function, get_derivative
 
 
-class JAXUtils:
-    """Class to contain the evaluation functions for the neural nets"""
-
-
 class DenseLayer:
     """A single layer of a dense neural net, stores the weights in addition to the gradients of the last evaluation"""
 
@@ -43,7 +39,7 @@ class DenseLayer:
         return self.output
 
     @staticmethod
-    def activate_layer_static(inputs, params):
+    def activate_layer_static(params, inputs):
         s = jnp.dot(params[:, 1:], inputs) + params[:, 0]
         return nn.leaky_relu(s)
 
@@ -79,29 +75,6 @@ class DenseNet:
         self.learning_rate = learning_rate
         if self.recursive:
             self.input_with_state = []
-
-    def activate_xla(self, inputs):
-        """Vectorised method for running NN with JAX"""
-        activate_xla_impl = jit(vmap(DenseNet._activate_static, in_axes=(0, None)))
-        params = [layer.weights for layer in self.layers]
-        return activate_xla_impl(inputs, params)
-
-    @staticmethod
-    def _fitness_static(input, y0, params):
-        y = DenseNet._activate_static(input, params)
-        return jnp.dot(y0 - y, y0 - y)
-
-    def fitness_xla(self, inputs, y0):
-        """Vectorised method for calculating fitness with JAX"""
-        fitness_xla_impl = jit(vmap(DenseNet._fitness_static, in_axes=(0, 0, None)))
-        params = [layer.weights for layer in self.layers]
-        return fitness_xla_impl(inputs, y0, params)
-
-    def derivative_xla(self, inputs, y0):
-        """Vectorised method for calculating fitness with JAX"""
-        fitness_xla_impl = jit(vmap(jit(grad(DenseNet._fitness_static, argnums=2)), in_axes=(0, 0, None)))
-        params = [layer.weights for layer in self.layers]
-        return fitness_xla_impl(inputs, y0, params)
 
     def __repr__(self):
         pass
@@ -144,13 +117,6 @@ class DenseNet:
             for layer in self.layers:
                 output = layer.activate_layer(output)
             return output
-
-    @staticmethod
-    def _activate_static(inputs, params):
-        outputs = inputs
-        for param in params:
-            outputs = DenseLayer.activate_layer_static(outputs, param)
-        return outputs
 
     def mutate(self, rate):
         """Adds random noise to weights. Useful for evolution"""
@@ -215,6 +181,60 @@ class DenseNet:
         return fitness
 
 
+class DenseNetXLA(DenseNet):
+    """DenseNet modified to make use of JAX for GPU/CPU acceleration, AutoGrad and Vectorization"""
+
+    def __init__(self,
+                 input_size,
+                 fitness_function_string,
+                 recursive=False,
+                 initial_variance=0.01,
+                 learning_rate=0.0001
+                 ):
+        DenseNet.__init__(self, input_size, fitness_function_string, recursive, initial_variance, learning_rate)
+        if recursive:
+            raise NotImplementedError("recursion is not currently implemented for DenseNetXLA")
+
+    @staticmethod
+    def _activate_static(params, inputs):
+        outputs = inputs
+        for param in params:
+            outputs = DenseLayer.activate_layer_static(param, outputs)
+        return outputs
+
+    @staticmethod
+    def _fitness_static(params, input, y0):
+        y = DenseNetXLA._activate_static(params, input)
+        return jnp.dot(y0 - y, y0 - y)
+
+    def activate_xla(self, inputs):
+        """Vectorised method for running NN with JAX"""
+        activate_xla_impl = jit(vmap(DenseNetXLA._activate_static, in_axes=(None, 0)))
+        params = [layer.weights for layer in self.layers]
+        return activate_xla_impl(params, inputs)
+
+    def fitness_xla(self, inputs, y0):
+        """Vectorised method for calculating fitness with JAX"""
+        fitness_xla_impl = jit(vmap(DenseNetXLA._fitness_static, in_axes=(None, 0, 0)))
+        params = [layer.weights for layer in self.layers]
+        return fitness_xla_impl(params, inputs, y0)
+
+    def derivative_xla(self, inputs, y0):
+        """Vectorised method for calculating per example fitness derivative with JAX WRT to params"""
+        fitness_xla_impl = jit(vmap(jit(grad(DenseNetXLA._fitness_static)), in_axes=(None, 0, 0)))
+        params = [layer.weights for layer in self.layers]
+        return fitness_xla_impl(params, inputs, y0)
+
+    def update_xla(self, learning_rate=None):
+        """Updates the weights with a single SDG step. Assumes that the derivatives have already been calculated,
+        and skips frozen layers"""
+        if learning_rate is None:
+            learning_rate = self.learning_rate
+        for layer, frozen in zip(self.layers, self.frozen):
+            if not frozen:
+                layer.weights += learning_rate * layer.derivative
+
+
 @staticmethod
 def add_shared_layer(output_size, activation_string, models, frozen_list=None, input_size=None, initial_variance=0.2):
     """Adds layer to two or more models. The weight are shared between the models, and weight updates can be toggled
@@ -258,7 +278,7 @@ def update_trajectory(self, trajectory, discount=1.0, a=-0.001):
 
 
 def simple_test(recursive):
-    net = DenseNet(3, 'square_diff', recursive)
+    net = DenseNetXLA(3, 'square_diff', recursive)
     net.add_layer(2, 'sigmoid')
     net.add_layer(2, 'sigmoid')
     print(net.activate(np.array([1, 1, 1])))

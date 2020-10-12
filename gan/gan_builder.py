@@ -1,27 +1,38 @@
 import copy
 import numpy as np
 import os
+import sys
 import tensorflow.keras.backend as kb
 import yaml
 from keras import Sequential
+from keras import backend as K
+from keras.constraints import Constraint
 from keras.layers import Dense, Activation, LeakyReLU, InputLayer
 from keras.optimizers import Adam
-from keras.constraints import Constraint
-from keras import backend as K
+
 from learn.net import DenseNet
 
 
 def wasserstein_loss(y_actual, y_pred):
-    loss = y_actual * y_pred/y_actual.shape[0]
+    loss = y_actual * y_pred / y_actual.shape[0]
 
     return loss
 
+
 class GANBuilder:
-    def __init__(self, config_path=None):
-        config = self._get_config(config_path)
+    def __init__(self, config_path=None, config=None):
+        if config is None:
+            if config_path is None:
+                raise IOError("No config file specified")
+            config = self._get_config(config_path)
         self.model_config = config['model_config']
         self.dashboard_config = config['dashboard_config']
         self.generator, self.discriminator, self.adversarial = self._compile_models()
+
+    @staticmethod
+    def _get_config(config_path):
+        with open(config_path) as f:
+            return yaml.load(f, Loader=yaml.FullLoader)
 
     def _generate_data_real(self, batch_size):
         data_config = self.model_config['target_distribution']
@@ -93,11 +104,6 @@ class GANBuilder:
         self.discriminator.set_weights(discriminator_weights)
 
     @staticmethod
-    def _get_config(config_path):
-        with open(config_path) as f:
-            return yaml.load(f, Loader=yaml.FullLoader)
-
-    @staticmethod
     def _build_model(params):
         model = Sequential()
         model.add(InputLayer(input_shape=params['input_shape']))
@@ -157,16 +163,16 @@ class GANBuilder:
     def train_one_batch(self):
         self._train_generator_batch()
         if 'iterations' in self.model_config['discriminator_config']:
-            k=self.model_config['discriminator_config']['iterations']
+            k = self.model_config['discriminator_config']['iterations']
         else:
-            k=1
+            k = 1
         for _ in range(k):
-           samples = self._train_discriminator_batch()
+            samples = self._train_discriminator_batch()
         return samples
 
 
 if __name__ == "__main__":
     gan = GANBuilder('gan_config.yaml')
-    for _ in range():
+    for _ in range(1):
         gan.train_one_batch()
     print('finished')

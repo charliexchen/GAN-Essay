@@ -37,13 +37,17 @@ model_config:
   training_method: standard
   training_params: {}
 dashboard_config:
-  screen_height: 200
-  screen_width: 300
-  generator_graph:
+  screen_size: [500, 200]
+  plot_range: [-6, 6]
+  offset: 0.5
+  histogram_config:
+    buckets: 100
+    show_histogram: true
+  graph_config:
+    show_graphs: true
+    points: 50
     show_optimal_generator: true
-    show_generator_histogram: 20
     show_generator_kernel: true
-  discriminator_graph:
     show_optimal_discriminator_kernel: true
     show_discriminator: true
 
