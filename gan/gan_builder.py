@@ -28,6 +28,7 @@ class GANBuilder:
         self.model_config = config['model_config']
         self.dashboard_config = config['dashboard_config']
         self.generator, self.discriminator, self.adversarial = self._compile_models()
+        self.generation = 0
 
     @staticmethod
     def _get_config(config_path):
@@ -77,7 +78,7 @@ class GANBuilder:
         labels_shuffled = labels[shuffling]
         data_shuffled = np.concatenate((real_data, fake_data))[shuffling]
 
-        self.discriminator.train_on_batch(data_shuffled, labels_shuffled)
+        error = self.discriminator.train_on_batch(data_shuffled, labels_shuffled)
         if self.model_config['gan_type'] == 'wasserstein':
             clipping = self.model_config['gan_params']['clipping']
             for layer in self.discriminator.layers:
@@ -85,7 +86,7 @@ class GANBuilder:
                 for weights in layer.get_weights():
                     new_weights.append(K.clip(weights, -clipping, clipping))
                 layer.set_weights(new_weights)
-        return fake_data
+        return fake_data, error
 
     def _train_generator_batch(self):
         batch_size = self.model_config['generator_config']['batch_size']
@@ -167,8 +168,27 @@ class GANBuilder:
         else:
             k = 1
         for _ in range(k):
-            samples = self._train_discriminator_batch()
+            samples, error = self._train_discriminator_batch()
         return samples
+
+    def train_equilibrium_gan(self, temperature = 0.01):
+        def reject(generation):
+            random_number = np.random.random_sample()
+            rejection_probability = 1-np.exp(-temperature * generation)
+            return rejection_probability<random_number
+        self.generation+=1
+        samples, error = self._train_discriminator_batch()
+        backup_weights = self.discriminator.get_weights(),  self.generator.get_weights()
+        self._train_generator_batch()
+        for _ in range(10):
+            _samples, proposal_error = self._train_discriminator_batch()
+
+        if proposal_error>error or reject(self.generation):
+            error = proposal_error
+        else:
+            self.discriminator.set_weights(backup_weights[0])
+            self.generator.set_weights(backup_weights[1])
+
 
 
 if __name__ == "__main__":
