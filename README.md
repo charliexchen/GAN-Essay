@@ -22,7 +22,7 @@ This is followed by some more interesting results:
 <p align="center">
    <img src="https://github.com/charliexchen/GANEssay/blob/master/GAN%20Essay/wass.gif" width="600">
 </p>
-<p align="center"><i> <sub>Visualisation of a Wasserstein GAN learning a normal distribution</sub></i></p>
+<p align="center"><i> <sub>Visualisation of a Wasserstein GAN learning a normal distribution. This white histogram denotes samples from the generator, blue line is the discriminator and red line the target.</sub></i></p>
 
 This repo is a fork of the original repository which hosted the code anonymously -- The essays had to be submitted without any identifiers to avoid examiner bias. 
 Since that is no longer an issue, I am migrating that code over to my named GitHub alongside with document containing my essay for posterity. Furthermore, there have been some more novel developments over at Off the Convex Path, and this code will allow me to start experimenting with that.
