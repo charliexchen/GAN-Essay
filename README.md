@@ -19,6 +19,10 @@ This is followed by some more interesting results:
  * Proof existence of (ε-approximate mixed) Nash Equilibriums in GANs under certain conditions. When people are first introduced to GANs they're often told that "eventually the discriminator will return 0.5 all the time, and the generator's outputs will hopefully be indistinguishable from the training data". This result essentially formalises this concept and shows that it is indeed a stable equilibrium which the GAN might arrive at.
 
 
+<p align="center">
+   <img src="https://github.com/charliexchen/GANEssay/blob/master/GAN%20Essay/wass.gif" width="600">
+</p>
+<p align="center"><i> <sub>Visualisation of a Wasserstein GAN learning a normal distribution</sub></i></p>
 
 This repo is a fork of the original repository which hosted the code anonymously -- The essays had to be submitted without any identifiers to avoid examiner bias. 
 Since that is no longer an issue, I am migrating that code over to my named GitHub alongside with document containing my essay for posterity. Furthermore, there have been some more novel developments over at Off the Convex Path, and this code will allow me to start experimenting with that.
